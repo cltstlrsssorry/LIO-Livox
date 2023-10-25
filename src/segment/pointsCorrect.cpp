@@ -55,12 +55,13 @@ int FilterGndForPos_cor(float* outPoints,float*inPoints,int inNum)
     float THR=0.4;
     
 
-    float *imgMinZ=(float*)calloc(nx*ny,sizeof(float));
-    float *imgMaxZ=(float*)calloc(nx*ny,sizeof(float));
-    float *imgSumZ=(float*)calloc(nx*ny,sizeof(float));
-    float *imgMeanZ=(float*)calloc(nx*ny,sizeof(float));
-    int *imgNumZ=(int*)calloc(nx*ny,sizeof(int));
-    int *idtemp = (int*)calloc(inNum,sizeof(int));
+    float *imgMinZ=(float*)calloc(nx*ny,sizeof(float));//地面点云的最小高度
+    float *imgMaxZ=(float*)calloc(nx*ny,sizeof(float));//地面点云的最大高度
+    float *imgSumZ=(float*)calloc(nx*ny,sizeof(float));//地面点云的高度和
+    float *imgMeanZ=(float*)calloc(nx*ny,sizeof(float));//地面点云的平均高度
+    int *imgNumZ=(int*)calloc(nx*ny,sizeof(int));//栅格化处理后每个栅格中点的数量的数组。
+    int *idtemp = (int*)calloc(inNum,sizeof(int));//存储点云数据的索引的数组。
+
     for(int ii=0;ii<nx*ny;ii++)
     {
         imgMinZ[ii]=10;
@@ -91,6 +92,7 @@ int FilterGndForPos_cor(float* outPoints,float*inPoints,int inNum)
             }
         }
     }
+    
     for(int pid=0;pid<inNum;pid++)
     {
         if (outNum >= 60000)
@@ -286,7 +288,7 @@ int CorrectPoints_cor(float *fPoints,int pointNum,float *gndPos)
 
 int GetGndPos(float *pos, float *fPoints,int pointNum){
     float *fPoints3=(float*)calloc(60000*4,sizeof(float));//地面点
-    int pnum3 = FilterGndForPos_cor(fPoints3,fPoints,pointNum);
+    int pnum3 = FilterGndForPos_cor(fPoints3,fPoints,pointNum);//获取地面点,返回点数量
     float tmpPos[6];
     if (pnum3 < 3)
     {

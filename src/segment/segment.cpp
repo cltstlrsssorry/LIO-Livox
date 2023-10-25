@@ -27,28 +27,36 @@ int PCSeg::DoSeg(int *pLabel1, float* fPoints1, int pointNum)
 {
 
     // 1 down sampling
-    float *fPoints2=(float*)calloc(pointNum*4,sizeof(float));
-    int *idtrans1=(int*)calloc(pointNum,sizeof(int));
-    int *idtrans2=(int*)calloc(pointNum,sizeof(int));
+    float *fPoints2=(float*)calloc(pointNum*4,sizeof(float));//存储下采样后的点云
+    int *idtrans1=(int*)calloc(pointNum,sizeof(int));//存储下采样后的点云对应的索引
+    int *idtrans2=(int*)calloc(pointNum,sizeof(int));//存储下采样后的点云对应的索引
     int pntNum=0;
+
     if (this->pVImg == NULL)
     {
+        //建立一个体素格，大小为600*200*100*（sizeof 8）
         this->pVImg=(unsigned char*)calloc(DN_SAMPLE_IMG_NX*DN_SAMPLE_IMG_NY*DN_SAMPLE_IMG_NZ,sizeof(unsigned char));
     }
+
+    //memset函数的用法，用于将数组pVImg的所有元素设置为0。
     memset(pVImg,0,sizeof(unsigned char)*DN_SAMPLE_IMG_NX*DN_SAMPLE_IMG_NY*DN_SAMPLE_IMG_NZ);//600*200*30  
     
     for(int pid=0;pid<pointNum;pid++)
     {
+        //先加上偏差值求总长度，除以每个方格的长度，然后取整，结果就是具体的体素单元
         int ix=(fPoints1[pid*4]+DN_SAMPLE_IMG_OFFX)/DN_SAMPLE_IMG_DX; //0-240m -> -40-190m
         int iy=(fPoints1[pid*4+1]+DN_SAMPLE_IMG_OFFY)/DN_SAMPLE_IMG_DY; //-40-40m
         int iz=(fPoints1[pid*4+2]+DN_SAMPLE_IMG_OFFZ)/DN_SAMPLE_IMG_DZ;//认为地面为-1.8？ -2.5~17.5
 
         idtrans1[pid]=-1;
+        //判断点在最大范围内
         if((ix>=0)&&(ix<DN_SAMPLE_IMG_NX)&&(iy>=0)&&(iy<DN_SAMPLE_IMG_NY)&&(iz>=0)&&(iz<DN_SAMPLE_IMG_NZ)) //DN_SAMPLE_IMG_OFFX = 0 因此只保留前半块
         {
+            //每个体素乘对应的长度Z，Y，X轴，累计求和
             idtrans1[pid]=iz*DN_SAMPLE_IMG_NX*DN_SAMPLE_IMG_NY+iy*DN_SAMPLE_IMG_NX+ix; //记录这个点对应的索引
             if(pVImg[idtrans1[pid]]==0)//没有访问过，肯定栅格内会有重复的，所以fPoints2只取第一个
             {
+                
                 fPoints2[pntNum*4]=fPoints1[pid*4];
                 fPoints2[pntNum*4+1]=fPoints1[pid*4+1];
                 fPoints2[pntNum*4+2]=fPoints1[pid*4+2];
@@ -58,7 +66,7 @@ int PCSeg::DoSeg(int *pLabel1, float* fPoints1, int pointNum)
 
                 pntNum++;
             }
-            pVImg[idtrans1[pid]]=1;
+            pVImg[idtrans1[pid]]=1;//0和1是标志位，表示这个点已经访问过了
         }
 
     }
@@ -287,7 +295,6 @@ int FilterGndForPos(float* outPoints,float*inPoints,int inNum)
     int ny=2*y_len/dy;
     float offx=0,offy=-10;
     float THR=0.2;
-    
 
     float *imgMinZ=(float*)calloc(nx*ny,sizeof(float));
     float *imgMaxZ=(float*)calloc(nx*ny,sizeof(float));
